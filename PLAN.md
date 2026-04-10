@@ -47,15 +47,22 @@ Commit as V1, open a PR against `main`.
 ## What the audience sees in the PR
 
 - A big diff across many files (modules extracted, `main.bicep` rewritten)
-- The `main.snapshot.json` is **unchanged**, proving the refactor is safe
+- The `main.snapshot.json` is **unchanged** in the files tab, proving the refactor is safe
+- A **PR comment** from CI with the `bicep snapshot --mode validate` output showing no resource changes
 - This is the "aha" moment for the demo
+
+## CI Workflows
+
+- `deploy.yml` — deploys via `azure/bicep-deploy@v2` as a deployment stack (on push to `main`)
+- `snapshot-validate.yml` — runs `bicep snapshot --mode validate` on PRs and posts the result as a PR comment
 
 ## Steps to execute
 
 1. Create the monolithic bicep files (`main.bicep` + `main.bicepparam`)
-2. Initialize git repo, commit V0
-3. Generate snapshot, commit the snapshot file
-4. Create a feature branch
-5. Refactor into modules
-6. Regenerate snapshot, commit V1
-7. Push and create PR
+2. Add GitHub Actions workflows (deploy + snapshot validate)
+3. Initialize git repo, commit V0
+4. Generate snapshot, commit the snapshot file
+5. Create a feature branch
+6. Refactor into modules
+7. Regenerate snapshot, commit V1
+8. Push and create PR
