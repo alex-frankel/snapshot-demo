@@ -1,0 +1,140 @@
+{
+  "predictedResources": [
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.OperationalInsights/workspaces/snapshot-demo-law', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "snapshot-demo-law",
+      "apiVersion": "2023-09-01",
+      "location": "eastus2",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30
+      }
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Insights/components/snapshot-demo-ai', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.Insights/components",
+      "name": "snapshot-demo-ai",
+      "apiVersion": "2020-02-02",
+      "location": "eastus2",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "/providers/Microsoft.OperationalInsights/workspaces/snapshot-demo-law",
+        "RetentionInDays": 30
+      }
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Storage/storageAccounts/snapshotdemosa', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "snapshotdemosa",
+      "apiVersion": "2023-05-01",
+      "location": "eastus2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false
+      }
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Storage/storageAccounts/snapshotdemosa/blobServices/default', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "name": "snapshotdemosa/default",
+      "apiVersion": "2023-05-01"
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Storage/storageAccounts/snapshotdemosa/blobServices/default/containers/app-data', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "name": "snapshotdemosa/default/app-data",
+      "apiVersion": "2023-05-01",
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/serverfarms/snapshot-demo-asp', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.Web/serverfarms",
+      "name": "snapshot-demo-asp",
+      "apiVersion": "2023-12-01",
+      "location": "eastus2",
+      "sku": {
+        "name": "S1"
+      },
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Web/sites/snapshot-demo-app', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.Web/sites",
+      "name": "snapshot-demo-app",
+      "apiVersion": "2023-12-01",
+      "location": "eastus2",
+      "properties": {
+        "serverFarmId": "/providers/Microsoft.Web/serverfarms/snapshot-demo-asp",
+        "httpsOnly": true,
+        "siteConfig": {
+          "linuxFxVersion": "DOTNETCORE|8.0",
+          "alwaysOn": true,
+          "minTlsVersion": "1.2",
+          "appSettings": [
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference('/providers/Microsoft.Insights/components/snapshot-demo-ai', '2020-02-02').ConnectionString]"
+            },
+            {
+              "name": "STORAGE_CONNECTION_STRING",
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}', 'snapshotdemosa', listKeys('/providers/Microsoft.Storage/storageAccounts/snapshotdemosa', '2023-05-01').keys[0].value)]"
+            },
+            {
+              "name": "KEY_VAULT_URI",
+              "value": "[reference('/providers/Microsoft.KeyVault/vaults/snapshot-demo-kv', '2023-07-01').vaultUri]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.KeyVault/vaults/snapshot-demo-kv', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "snapshot-demo-kv",
+      "apiVersion": "2023-07-01",
+      "location": "eastus2",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[tenant().tenantId]",
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 7
+      }
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.KeyVault/vaults/snapshot-demo-kv/secrets/StorageConnectionString', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "snapshot-demo-kv/StorageConnectionString",
+      "apiVersion": "2023-07-01",
+      "properties": {
+        "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}', 'snapshotdemosa', listKeys('/providers/Microsoft.Storage/storageAccounts/snapshotdemosa', '2023-05-01').keys[0].value)]"
+      }
+    },
+    {
+      "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.KeyVault/vaults/snapshot-demo-kv/secrets/AppInsightsConnectionString', subscription().subscriptionId, resourceGroup().name)]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "snapshot-demo-kv/AppInsightsConnectionString",
+      "apiVersion": "2023-07-01",
+      "properties": {
+        "value": "[reference('/providers/Microsoft.Insights/components/snapshot-demo-ai', '2020-02-02').ConnectionString]"
+      }
+    }
+  ],
+  "diagnostics": []
+}
