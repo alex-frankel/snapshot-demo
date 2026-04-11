@@ -16,141 +16,59 @@ param kvSku string = 'standard'
 @description('Log retention in days')
 param logRetentionDays int = 30
 
-// ---------- Log Analytics Workspace ----------
+// ---------- Monitoring ----------
 
-resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-  name: '${baseName}-law'
-  location: location
-  properties: {
-    sku: {
-      name: 'PerGB2018'
-    }
-    retentionInDays: logRetentionDays
+module monitoring 'modules/monitoring.bicep' = {
+  name: 'monitoring'
+  params: {
+    baseName: baseName
+    location: location
+    logRetentionDays: logRetentionDays
   }
 }
 
-// ---------- Application Insights ----------
+// ---------- Storage ----------
 
-resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: '${baseName}-ai'
-  location: location
-  kind: 'web'
-  properties: {
-    Application_Type: 'web'
-    WorkspaceResourceId: logAnalytics.id
-    RetentionInDays: logRetentionDays
-  }
-}
-
-// ---------- Storage Account ----------
-
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
-  name: replace('${baseName}sa', '-', '')
-  location: location
-  kind: 'StorageV2'
-  sku: {
-    name: storageSku
-  }
-  properties: {
-    supportsHttpsTrafficOnly: true
-    minimumTlsVersion: 'TLS1_2'
-    allowBlobPublicAccess: false
-  }
-}
-
-resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
-  parent: storageAccount
-  name: 'default'
-}
-
-resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobServices
-  name: 'app-data'
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
-// ---------- App Service Plan ----------
-
-resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: '${baseName}-asp'
-  location: location
-  sku: {
-    name: appServicePlanSku
-  }
-  properties: {
-    reserved: true
-  }
-}
-
-// ---------- Web App ----------
-
-resource webApp 'Microsoft.Web/sites@2023-12-01' = {
-  name: '${baseName}-app'
-  location: location
-  properties: {
-    serverFarmId: appServicePlan.id
-    httpsOnly: true
-    siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|8.0'
-      alwaysOn: true
-      minTlsVersion: '1.2'
-      appSettings: [
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: appInsights.properties.ConnectionString
-        }
-        {
-          name: 'STORAGE_CONNECTION_STRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value}'
-        }
-        {
-          name: 'KEY_VAULT_URI'
-          value: keyVault.properties.vaultUri
-        }
-      ]
-    }
+module storage 'modules/storage.bicep' = {
+  name: 'storage'
+  params: {
+    baseName: baseName
+    location: location
+    storageSku: storageSku
   }
 }
 
 // ---------- Key Vault ----------
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: '${baseName}-kv'
-  location: location
-  properties: {
-    sku: {
-      family: 'A'
-      name: kvSku
-    }
-    tenantId: tenant().tenantId
-    enableRbacAuthorization: true
-    enableSoftDelete: true
-    softDeleteRetentionInDays: 7
+module keyvault 'modules/keyvault.bicep' = {
+  name: 'keyvault'
+  params: {
+    baseName: baseName
+    location: location
+    kvSku: kvSku
+    storageConnectionString: storage.outputs.storageConnectionString
+    appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
   }
 }
 
-resource storageConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name: 'StorageConnectionString'
-  properties: {
-    value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value}'
-  }
-}
+// ---------- Web App ----------
 
-resource appInsightsKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name: 'AppInsightsConnectionString'
-  properties: {
-    value: appInsights.properties.ConnectionString
+module webapp 'modules/webapp.bicep' = {
+  name: 'webapp'
+  params: {
+    baseName: baseName
+    location: location
+    appServicePlanSku: appServicePlanSku
+    appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
+    storageConnectionString: storage.outputs.storageConnectionString
+    keyVaultUri: keyvault.outputs.keyVaultUri
   }
 }
 
 // ---------- Outputs ----------
 
-output webAppUrl string = 'https://${webApp.properties.defaultHostName}'
-output keyVaultUri string = keyVault.properties.vaultUri
-output storageAccountName string = storageAccount.name
-output appInsightsName string = appInsights.name
-output logAnalyticsId string = logAnalytics.id
+output webAppUrl string = webapp.outputs.webAppUrl
+output keyVaultUri string = keyvault.outputs.keyVaultUri
+output storageAccountName string = storage.outputs.storageAccountName
+output appInsightsName string = monitoring.outputs.appInsightsName
+output logAnalyticsId string = monitoring.outputs.logAnalyticsId
