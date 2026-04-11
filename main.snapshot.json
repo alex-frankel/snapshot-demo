@@ -80,7 +80,7 @@
       "name": "snapshot-demo-kv/StorageConnectionString",
       "apiVersion": "2023-07-01",
       "properties": {
-        "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}', 'snapshotdemosa', listKeys('/subscriptions/996a2f3f-ee01-4ffd-9765-d2c3fc98f30a/resourceGroups/rg-snapshot-demo/providers/Microsoft.Storage/storageAccounts/snapshotdemosa', '2023-05-01').keys[0].value)]"
+        "value": "[listOutputsWithSecureValues('/subscriptions/996a2f3f-ee01-4ffd-9765-d2c3fc98f30a/resourceGroups/rg-snapshot-demo/providers/Microsoft.Resources/deployments/storage', '2025-04-01').storageConnectionString]"
       }
     },
     {
@@ -125,7 +125,7 @@
             },
             {
               "name": "STORAGE_CONNECTION_STRING",
-              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}', 'snapshotdemosa', listKeys('/subscriptions/996a2f3f-ee01-4ffd-9765-d2c3fc98f30a/resourceGroups/rg-snapshot-demo/providers/Microsoft.Storage/storageAccounts/snapshotdemosa', '2023-05-01').keys[0].value)]"
+              "value": "[listOutputsWithSecureValues('/subscriptions/996a2f3f-ee01-4ffd-9765-d2c3fc98f30a/resourceGroups/rg-snapshot-demo/providers/Microsoft.Resources/deployments/storage', '2025-04-01').storageConnectionString]"
             },
             {
               "name": "KEY_VAULT_URI",

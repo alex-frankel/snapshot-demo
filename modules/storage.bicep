@@ -35,4 +35,5 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
 }
 
 output storageAccountName string = storageAccount.name
+@secure()
 output storageConnectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value}'
