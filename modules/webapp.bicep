@@ -8,9 +8,11 @@ param location string
 param appServicePlanSku string
 
 @description('The Application Insights connection string')
+@secure()
 param appInsightsConnectionString string
 
 @description('The storage connection string')
+@secure()
 param storageConnectionString string
 
 @description('The Key Vault URI')
