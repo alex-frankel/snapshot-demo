@@ -33,7 +33,12 @@ jobs:
       - name: Run Snapshot Validate
         id: validate
         run: |
-          OUTPUT=$(bicep snapshot main.bicepparam --mode validate 2>&1 | sed 's/\x1b\[[0-9;]*m//g') || true
+          OUTPUT=$(bicep snapshot main.bicepparam --mode validate \
+            --subscription-id ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+            --resource-group ${{ vars.RESOURCE_GROUP_NAME }} \
+            --location eastus2 \
+            --tenant-id ${{ secrets.AZURE_TENANT_ID }} \
+            2>&1 | sed 's/\x1b\[[0-9;]*m//g') || true
           echo "$OUTPUT"
           {
             echo 'SNAPSHOT_OUTPUT<<EOF'
