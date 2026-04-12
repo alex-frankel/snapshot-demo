@@ -34,10 +34,10 @@ jobs:
         id: validate
         run: |
           OUTPUT=$(bicep snapshot main.bicepparam --mode validate \
-            --subscription-id ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
-            --resource-group ${{ vars.RESOURCE_GROUP_NAME }} \
+            --subscription-id 996a2f3f-ee01-4ffd-9765-d2c3fc98f30a \
+            --resource-group rg-snapshot-demo \
             --location eastus2 \
-            --tenant-id ${{ secrets.AZURE_TENANT_ID }} \
+            --tenant-id 72f988bf-86f1-41af-91ab-2d7cd011db47 \
             2>&1 | sed 's/\x1b\[[0-9;]*m//g') || true
           echo "$OUTPUT"
           {
