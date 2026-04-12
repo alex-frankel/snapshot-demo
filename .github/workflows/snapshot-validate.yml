@@ -15,8 +15,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout PR branch
         uses: actions/checkout@v4
+
+      - name: Fetch base branch snapshot
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.sha }} --depth=1
+          git show ${{ github.event.pull_request.base.sha }}:main.snapshot.json > main.snapshot.json
 
       - name: Install Bicep CLI
         run: |
